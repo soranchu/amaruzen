@@ -1,0 +1,70 @@
+div.amaruzen-brand{
+	border: solid 1px rgb(109,174,255);
+	border-radius: 6px;
+	background: rgb(235,243,254);
+	overflow: hidden;
+	margin: 8px -1px 0 1px;
+}
+div.amaruzen-brand-title{
+	background: rgb(192,219,242);
+	padding: 2px 12px;
+/* 	border-radius: 6px 6px 0 0; */
+	font-size:small;
+	display: table;
+	width: 100%;
+}
+.amaruzen-no-store{
+	padding:8px;
+	font-size : small;
+}
+
+.amaruzen-brand-title-text{
+	display: table-cell;
+	vertical-align: middle;
+}
+
+div.amaruzen-brand-loading{
+	padding: 4px 12px;
+	font-size:small;
+}
+img#amaruzen-loading-icon{
+	padding-left: 8px;
+	
+}
+a.amaruzen-detail-link{
+	font-size:x-small;
+	padding-left:8px;
+}
+div.amaruzen-store-area{
+	padding:8px;
+}
+
+div.amaruzen-store-area-name{
+	font-size : small;
+	margin-bottom:4px;
+}
+div.amaruzen-store-area-items{
+	margin-left:8px;
+}
+
+div.amaruzen-store{
+	display:inline-block;
+	padding:4px;
+}
+
+div.amaruzen-store-book-loc{
+	display:none;
+}
+div.amaruzen-store-name{
+	display:inline-block;
+}
+div.amaruzen-store-icon{
+	display:inline-block;
+	vertical-align: middle;
+	padding-right:4px;
+}
+
+.amaruzen-store-areas{
+	float : right;
+	margin:0;
+}
