@@ -1,11 +1,17 @@
 {
+	"manifest_version":2,
 	"name": "amaruzen",
 	"version": "0.2",
 	"description": "amazonの書籍ページ内に丸善・ジュンク堂の店頭在庫を表示します。 近くの本屋さんで買ったほうが早いこと、ありませんか？",
 	"page_action": {
 		"default_title":"amaruzen"
 	},
-	"background_page" : "background.html",
+	"background" : {
+		"scripts":["script/background.js"]
+	},
+	"web_accessible_resources":[
+		"res/loader.gif"
+	],
 	"content_scripts":[
 		{
 			"matches":["http://www.amazon.co.jp/*","https://www.amazon.co.jp/*"],
@@ -19,6 +25,7 @@
 		"128":"res/icon_128.png"
 	},
 	"permissions":[
-		"http://www.junkudo.co.jp/"
+		"http://www.junkudo.co.jp/",
+		"storage"
 	]
 }

@@ -1,7 +1,16 @@
-var content = $("td.bucket div.content ul li:contains('ISBN-10')").contents();
-if( content && content.length > 1 ){
-	var isbn = $.trim(content[1].textContent);
-	
+var isbn10Dom = $("td.bucket div.content ul li:contains('ISBN-10')").contents();
+var isbn13Dom = $("td.bucket div.content ul li:contains('ISBN-13')").contents();
+var isbn10,isbn13;
+
+if( isbn10Dom && isbn10Dom.length > 1 ){
+	isbn10 = $.trim(isbn10Dom[1].textContent);
+}
+
+if( isbn13Dom && isbn13Dom.length > 1 ){
+	isbn13 = $.trim(isbn13Dom[1].textContent).replace(/\-/,"");
+}
+
+if( isbn10 || isbn13 ){
 	$("form#handleBuy>table:eq(2)>tbody>tr:nth-child(8)")
 		.after('<tr class="amaruzen-injection">');
 	/*
@@ -37,6 +46,7 @@ if( content && content.length > 1 ){
 		if( res && res.value ){
 			default_selected = res.value;
 		}
+		var isbn = isbn10 || isbn13;
 		$.get("http://www.junkudo.co.jp/detail.jsp",{ISBN:isbn},function(res){
 			//rewrite "src" attribute of <img> to suppress request from browser
 			res = res.replace(/ src=/g,' data-src=');
