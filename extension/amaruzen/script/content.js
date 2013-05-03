@@ -1,4 +1,5 @@
-var VERSION = 0.4;
+var VERSION = 0.41;//current minor version
+var FORMAT_VERSION = 0.4; //current major version
 
 var isbn10Dom = $("td.bucket div.content ul li:contains('ISBN-10')").contents();
 var isbn13Dom = $("td.bucket div.content ul li:contains('ISBN-13')").contents();
@@ -52,7 +53,7 @@ if( isbn10 || isbn13 ){
 		if( res && res.area ){
 			default_selected = res.area;
 		}
-		if( res && res.version && res.version >= VERSION ){
+		if( res && res.version && res.version >= FORMAT_VERSION ){
 			firstInit = false;
 		}
 		var isbn = isbn10 || isbn13;
@@ -199,38 +200,48 @@ function loadStock(productId, areaId, areaName){
 				.appendTo($area_container);
 
 			for( var i = 0; i< results.length; ++i){
-				if( results.hasOwnProperty(i) ){
-					var $item = $("<div>").addClass("amaruzen-store");
+				var $item = $("<div>").addClass("amaruzen-store");
+				var mj = /\s*(MARUZEN|丸善)?&?(ジュンク堂書店|淳久堂|(?:COMICS)?\sJUNKUDO)?\s*(.*)/.exec(results[i].store.text());
+				var $name = $("<a>")
+					.text( mj&&mj[3] ? mj[3] :  $.trim(results[i].store.text()) );
+				$name
+					.wrap("<div>").parent()
+					.addClass("amaruzen-store-name")
+					.appendTo($item);
+				
+				var $icon = $("<img>")
+					.attr("src", chrome.extension.getURL("./res/shopicon_M.png"))
+					.addClass("amaruzen-store-icon")
+					.prependTo($name);
 
-					var $name = $("<a>")
-						.text($.trim(results[i].store.text()));
-					$name
-						.wrap("<div>").parent()
-						.addClass("amaruzen-store-name")
-						.appendTo($item);
-
-					var storeId = /.*store_id=(\d+).*/.exec(results[i].store.attr("href"));
-					if( storeId && storeId.length > 0 ){
-						var reserveLink = "http://www.junkudo.co.jp/mj/products/keep_order.php?product_id=" + productId + "&store_id=" + storeId[1];
-						$name
-							.attr("href",reserveLink )
-							.attr("target","_blank")
-							.click(function(){
-								window.open($(this).attr("href"), '','width=600,height=400'); 
-								return false;
-							});
-						
-					}else{
-						$name
-							.attr("href","http://www.junkudo.co.jp/" + results[i].store.attr("href") )
-							.attr("target","_blank");
-					}
-
-					
-					$item.attr("title",results[i].stock + " / 棚位置：" + results[i].location);
-					$item.appendTo($area_holder);
-
+				if( mj && mj[1] && mj[2] ){
+					$icon.attr("src", chrome.extension.getURL("./res/shopicon_MandJ.png"));
+				}else if( mj && mj[1] ){
+					$icon.attr("src", chrome.extension.getURL("./res/shopicon_M.png"));
+				}else if( mj && mj[2] ){
+					$icon.attr("src", chrome.extension.getURL("./res/shopicon_J.png"));
 				}
+
+				var storeId = /.*store_id=(\d+).*/.exec(results[i].store.attr("href"));
+				if( storeId && storeId.length > 0 ){
+					var reserveLink = "http://www.junkudo.co.jp/mj/products/keep_order.php?product_id=" + productId + "&store_id=" + storeId[1];
+					$name
+						.attr("href",reserveLink )
+						.attr("target","_blank")
+						.click(function(){
+							window.open($(this).attr("href"), '','width=600,height=400'); 
+							return false;
+						});
+					
+				}else{
+					$name
+						.attr("href","http://www.junkudo.co.jp/" + results[i].store.attr("href") )
+						.attr("target","_blank");
+				}
+
+				
+				$item.attr("title",$.trim(results[i].store.text()) + " " + results[i].stock + " / 棚位置：" + results[i].location);
+				$item.appendTo($area_holder);
 			}
 			$area_container.slideDown();
 			
