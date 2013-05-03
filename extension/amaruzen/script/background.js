@@ -13,39 +13,52 @@
 				localStorage.removeItem("area");
 			});
 		}
-		setItem = function(key, value, cb){
-			var v = {};
-			v[key] = value;
-			chrome.storage.sync.set(v, cb);
+		setItem = function(kv, cb){
+			chrome.storage.sync.set(kv, cb);
 		};
-		getItem = function(key,cb){
-			chrome.storage.sync.get(key, function(item){
-				cb( item[key] );
+		getItem = function(keys,cb){
+			chrome.storage.sync.get(keys, function(items){
+				cb( items );
 			});
 		};
 	}else{
 		console.log("using localStorage");
-		setItem = function(key, value, cb){
-			localStorage.setItem(key, value);
+		setItem = function(kvs, cb){
+			for( var key in kvs ){
+				if( kvs.hasOwnProperty(key) ){
+					localStorage.setItem(key, kvs[key]);
+				}
+			}
 			cb();
 		};
-		getItem = function(key,cb){
-			cb(localStorage.getItem(key));
+		getItem = function(keys,cb){
+			var res = new Array();
+			for( var key in keys ){
+				if( keys.hasOwnProperty(key) ){
+					res[key] = localStorage.getItem(key);
+				}
+			}
+			cb(res);
 		};
 	}
 	chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
 		var ret = {};
 		switch(request.cmd){
 		case "SET_AREA":
-			setItem("area", request.value, function(){
+			setItem({area:request.value}, function(){
 				ret.status = "OK";
 				sendResponse(ret);
 			});
 			break;
-		case "GET_AREA":
-			getItem("area",function(value){
-				ret.value = value;
+		case "SET_VERSION":
+			setItem({version:request.value}, function(){
+				ret.status = "OK";
 				sendResponse(ret);
+			});
+			break;
+		case "GET_DATA":
+			getItem(["area","version"],function(value){
+				sendResponse(value);
 			});
 			break;
 		default:

@@ -2,12 +2,14 @@ div.amaruzen-brand{
 	border: solid 1px rgb(109,174,255);
 	border-radius: 6px;
 	background: rgb(235,243,254);
-	overflow: hidden;
+	overflow: visible;
 	margin: 8px -1px 0 1px;
+	position : relative;
 }
 div.amaruzen-brand-title{
 	background: rgb(192,219,242);
-	padding: 2px 12px;
+	padding: 0;
+	margin: 0;
 /* 	border-radius: 6px 6px 0 0; */
 	font-size:small;
 	display: table;
@@ -21,10 +23,13 @@ div.amaruzen-brand-title{
 .amaruzen-brand-title-text{
 	display: table-cell;
 	vertical-align: middle;
+	padding: 6px 6px;
 }
 
 div.amaruzen-brand-loading{
-	padding: 4px 12px;
+	display: table;
+	width:100%;
+	padding: 0;
 	font-size:small;
 }
 img#amaruzen-loading-icon{
@@ -44,7 +49,7 @@ div.amaruzen-store-area-name{
 	margin-bottom:4px;
 }
 div.amaruzen-store-area-items{
-	margin-left:8px;
+	margin-left:6px;
 }
 
 div.amaruzen-store{
@@ -56,6 +61,7 @@ div.amaruzen-store-book-loc{
 	display:none;
 }
 div.amaruzen-store-name{
+	font-size : small;
 	display:inline-block;
 }
 div.amaruzen-store-icon{
@@ -65,6 +71,44 @@ div.amaruzen-store-icon{
 }
 
 .amaruzen-store-areas{
-	float : right;
+	display: table-cell;
 	margin:0;
+	padding: 2px 6px;
+	text-align : right;
+}
+
+div.amaruzen-overlay{
+	top: 0;
+	left: 0;
+	width: 100%;
+	min-height: 100px;
+	height: 100%;
+	position: absolute;
+	overflow: hidden;
+	background: rgba(0, 0, 0, 0.85);
+	cursor: pointer;
+	border-radius: 6px;
+}
+
+div.amaruzen-overlay-inner{
+	display: table;
+	height:100%;
+	width:100%;
+}
+div.amaruzen-overlay-box{
+	display: table-cell;
+	vertical-align:middle;
+	color: white;
+	font-size:small;
+	padding: 10px 40px;
+}
+div.overlay-title{
+	text-align : center;
+	padding : 4px;
+	font-weight : bold;
+}
+
+div.overlay-txt-small{
+	text-align : right;
+	font-size:x-small;
 }

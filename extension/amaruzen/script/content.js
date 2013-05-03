@@ -1,3 +1,5 @@
+var VERSION = 0.4;
+
 var isbn10Dom = $("td.bucket div.content ul li:contains('ISBN-10')").contents();
 var isbn13Dom = $("td.bucket div.content ul li:contains('ISBN-13')").contents();
 var isbn10,isbn13;
@@ -9,30 +11,34 @@ if( isbn10Dom && isbn10Dom.length > 1 ){
 if( isbn13Dom && isbn13Dom.length > 1 ){
 	isbn13 = $.trim(isbn13Dom[1].textContent).replace(/\-/,"");
 }
+var $junkudo_holder;
+var $junkudo_header;
+var $junkudo_header_text;
+var $junkudo_loading;
+var firstInit = true;
 
 if( isbn10 || isbn13 ){
 	$("form#handleBuy>table:eq(2)>tbody>tr:nth-child(8)")
 		.after('<tr class="amaruzen-injection">');
-	/*
-	$.get("http://zaiko.maruzen.co.jp/tenpo_stock/view.asp",{gid:isbn},function(res){
-		var $shoplist = $("div.shoplist > span > table", res)
-			.appendTo(".amaruzen-injection")
-			.wrapAll('<div class="amaruzen-brand"/>')
-			.wrap('<div class="amaruzen-store"/>');
-		$shoplist.find("a").each(function(){
-			$(this).removeAttr("onclick")
-				.attr("target","_blank")
-				.attr("href", "http://zaiko.maruzen.co.jp/tenpo_stock/"+$(this).attr("href"));
-		});
-	});*/
-	var $junkudo_holder = $("<div>")
+
+	$junkudo_holder = $("<div>")
 		.addClass("amaruzen-brand")
 		.appendTo(".amaruzen-injection");
 	
-	var $junkudo_loading = $("<div>")
+	$junkudo_header = $("<div>")
 		.addClass("amaruzen-brand-loading")
-		.text("丸善とジュンク堂書店の在庫を確認中")
 		.appendTo($junkudo_holder);
+
+	$junkudo_header_text = $("<span>")
+		.addClass("amaruzen-brand-title-text")
+		.appendTo($junkudo_header)
+		.hide();
+
+	
+	$junkudo_loading = $("<span>")
+		.addClass("amaruzen-brand-title-text")
+		.text("丸善とジュンク堂書店の在庫を確認中")
+		.appendTo($junkudo_header);
 	
 	$("<img>")
 		.attr("src",chrome.extension.getURL("./res/loader.gif"))
@@ -41,142 +47,224 @@ if( isbn10 || isbn13 ){
 	
 	//$junkudo_holder.hide().slideDown();
 	
-	chrome.extension.sendRequest({"cmd":"GET_AREA"}, function(res){
+	chrome.extension.sendRequest({"cmd":"GET_DATA"}, function(res){
 		var default_selected = null;
-		if( res && res.value ){
-			default_selected = res.value;
+		if( res && res.area ){
+			default_selected = res.area;
+		}
+		if( res && res.version && res.version >= VERSION ){
+			firstInit = false;
 		}
 		var isbn = isbn10 || isbn13;
-		$.get("http://www.junkudo.co.jp/detail.jsp",{ISBN:isbn},function(res){
+		$.get("http://www.junkudo.co.jp/mj/products/detail.php",{isbn:isbn},function(resDetail){
 			//rewrite "src" attribute of <img> to suppress request from browser
-			res = res.replace(/ src=/g,' data-src=');
-			var $results = $('div[id^="AreaGroup_"]', res);
-	
-			if( $results.length == 0 ){
-				$junkudo_loading.text("丸善・ジュンク堂店舗に在庫はありません。");
-				$("#amaruzen-loading-icon").hide();
-			}else{
-				$junkudo_loading
-					.removeClass("amaruzen-brand-loading")
-					.addClass("amaruzen-brand-title")
-					.empty();
-				
-				var $text = $("<span>")
-					.addClass("amaruzen-brand-title-text")
-					.text("丸善・ジュンク堂の以下の店舗に在庫があります。")
-					.appendTo($junkudo_loading);
-				
-				$("<a>")
-					.addClass("amaruzen-detail-link")
-					.attr("href", "http://www.junkudo.co.jp/detail.jsp?ISBN="+isbn)
-					.attr("target","_blank")
-					.text("詳細")
-					.appendTo($text);
-				
-				var $dropdown = $("<select>")
-					.attr("name","amaruzen-area-select")
-					.attr("id","amaruzen-area-select")
-					.change(function(){
-						$(".amaruzen-store-area").hide();
-						var $area = $("#"+$(this).val());
-						if( $area && $area.length > 0 ){
-							$area.show();
-						}else{
-							$(".amaruzen-no-store").show();
-						}
-						chrome.extension.sendRequest({"cmd":"SET_AREA","value":$(this).val()});
-					});
-				$dropdown
-					.wrap("<span>")
-					.parent()
-					.prepend("エリアを変更:")
-					.addClass("amaruzen-store-areas")
-					.appendTo($junkudo_loading);
-				
-				
-				var selected = false;
-				$results.each(function(){
-					var areaname = $(this).attr("id").substring(10);
-					var $area_container = $("<div>")
-						.addClass("amaruzen-store-area")
-						.attr("id", $(this).attr("id"))
-						.appendTo($junkudo_holder)
-						.hide();
-					
-					$("<div>")
-						.addClass("amaruzen-store-area-name")
-						.text(areaname)
-						.prependTo($area_container)
-						.hide();
-					
-					var $area_holder = $("<div>")
-						.addClass("amaruzen-store-area-items")
-						.appendTo($area_container);
-	
-					var $opt = $("<option>")
-						.val($(this).attr("id"))
-						.text(areaname)
-						.appendTo($dropdown);
-					
-					$(this).find("table > tbody > tr > td > div > table > tbody").each(function(){
-						var $item = $("<div>").addClass("amaruzen-store");
-						
-						var $icon = $(this).find("td:nth-child(2) > img");
-						var iconsrc = $icon.attr("data-src");
-						$icon.attr("src","http://www.junkudo.co.jp/"+iconsrc)
-							.wrap("<div>").parent()
-							.addClass("amaruzen-store-icon")
-							.appendTo($item);
-						
-						var $name = $(this).find("td:nth-child(3) > font")
-							.wrap("<div>").parent()
-							.addClass("amaruzen-store-name")
-							.appendTo($item);
-						$name.find("a").each(function(){
-							if( $(this).attr("href").indexOf("http") != 0 ){
-								$(this).attr("href","http://www.junkudo.co.jp/"+$(this).attr("href"));
-							}
-						});
-	
-						var $bookloc = $(this).find("td:nth-child(4) > font");
-						$bookloc
-							.wrap("<div>").parent()
-							.addClass("amaruzen-store-book-loc")
-							.appendTo($item);
-						var storename = "";
-						iconsrc = iconsrc.substring(iconsrc.lastIndexOf("/")+1);
-						switch(iconsrc){
-						case "junku16X16.jpg":storename = "ジュンク堂 ";break;
-						case "maruzen16X16.jpg":storename = "丸善 ";break;
-						case "MJ_16X16.gif":storename = "MARUZEN&ジュンク堂 ";break;
-						}
-						
-						$item.attr("title",storename + $name.text()+" / 店内の場所:"+$bookloc.text());
-						$item.appendTo($area_holder);
-					});
-					if( !selected && $(this).attr("id") == default_selected ){
-						$area_container.slideDown();
-						$opt.prop("selected","selected");
-						$dropdown.change();
-						selected = true;
-					}
-				});
-				if( !selected ){
-					if( default_selected == null ){
-						$dropdown.change();
-					}else{
-						$("<div>")
-							.addClass("amaruzen-store-area amaruzen-no-store")
-							.text(default_selected.substring(10) + "に在庫のある店舗はありません。")
-							.appendTo($junkudo_holder);
-						$("<option>")
-							.text(default_selected.substring(10))
-							.prop("selected","selected")
-							.appendTo($dropdown);
-					}
-				}
+			resDetail = resDetail.replace(/ src=/g,' data-src=');
+
+			var productId = $('input[name="product_id"]', resDetail).val();
+			var $areas = $('.state-button-group > a[href^="stock.php"].btn',resDetail);
+			
+			if( productId == null || $.trim(productId).length == 0 ){
+				$junkudo_header
+					.addClass("amaruzen-brand-loading")
+					.removeClass("amaruzen-brand-title");
+				$junkudo_loading.hide();
+				$junkudo_header_text
+					.text("丸善・ジュンク堂に書籍情報がありません。")
+					.show();
+				return;
 			}
+			
+			var $dropdown = $("<select>")
+				.attr("name","amaruzen-area-select")
+				.attr("id","amaruzen-area-select")
+				.change(function(){
+					var newArea = $(this).val();
+					chrome.extension.sendRequest({"cmd":"SET_AREA","value":newArea});
+
+					loadStock(productId,newArea,$(this).find(":selected").text());
+				});
+			$dropdown
+				.wrap("<span>")
+				.parent()
+				.prepend("エリアを変更:")
+				.addClass("amaruzen-store-areas")
+				.appendTo($junkudo_header)
+				.hide();
+
+			var selected = null;
+			var $allArea;
+			$areas.each(function(){
+				var regex = /.*area_id=(\d+)/.exec( $(this).attr("href") );
+				var areaId = null;
+				if( regex && regex.length > 0 ){
+					areaId = regex[1];
+				}
+				var $opt = $("<option>")
+				.val(areaId)
+				.text($(this).text())
+				.appendTo($dropdown);
+				
+				if( default_selected == areaId ){
+					$opt.prop("selected","selected");
+					selected = $opt;
+				}
+				if( areaId == null ){
+					$allArea = $opt;
+				}
+			});
+			if( !selected ){
+				$allArea.prop("selected","selected");
+				default_selected = null;
+				selected = $allArea;
+			}
+			loadStock(productId, default_selected, selected.text());
 		});
 	
 	});
+}
+
+function loadStock(productId, areaId, areaName){
+	var params = {product_id:productId};
+	if( areaId != null ){
+		params.area_id = areaId;
+	}else{
+		areaId = "0";
+	}
+	
+	$junkudo_header
+		.addClass("amaruzen-brand-loading")
+		.removeClass("amaruzen-brand-title");
+	$junkudo_loading.show();
+	$junkudo_header_text.hide();
+	//$(".amaruzen-store-areas").hide();
+	$(".amaruzen-store-area").remove();
+
+	
+	$.get("http://www.junkudo.co.jp/mj/products/stock.php", params, function(res){
+		res = res.replace(/ src=/g,' data-src=');
+		var $rows = $('.stock_detail tr',res);
+		var results = new Array;
+		$rows.each(function(idx, row){
+			var $store = $("td a:eq(0)", row);
+			var $stock = $('td:eq(1) span:not(".label-important")',row);
+			var $reserve;// = $("td:eq(2)",row);
+			var $location = $("td:eq(2)",row);
+			if( $stock.length > 0 ){
+				results.push( {store:$store,stock:$.trim($stock.text()),reserve:$reserve,location:$.trim($location.text())} );
+			}
+		});
+		
+		if( results.length == 0 ){
+			$junkudo_header
+				.addClass("amaruzen-brand-loading")
+				.removeClass("amaruzen-brand-title");
+			$junkudo_loading.hide();
+			$junkudo_header_text
+				.empty()
+				.text( areaName + "の丸善・ジュンク堂店舗に在庫はありません。")
+				.show();
+			$(".amaruzen-store-areas").show();
+		}else{
+			$junkudo_header
+				.removeClass("amaruzen-brand-loading")
+				.addClass("amaruzen-brand-title");
+			$junkudo_loading.hide();
+			$junkudo_header_text
+				.empty()
+				.text("丸善・ジュンク堂の以下の店舗に在庫があります。")
+				.show();
+			$("<a>")
+				.addClass("amaruzen-detail-link")
+				.attr("href", "http://www.junkudo.co.jp/mj/products/stock.php?product_id="+productId+"&area_id="+areaId)
+				.attr("target","_blank")
+				.text("詳細")
+				.appendTo($junkudo_header_text);
+			$(".amaruzen-store-areas").show();
+
+			var areaname = "area_name";
+			var $area_container = $("<div>")
+				.addClass("amaruzen-store-area")
+				.attr("id", "area_id")
+				.appendTo($junkudo_holder)
+				.hide();
+			
+			$("<div>")
+				.addClass("amaruzen-store-area-name")
+				.text(areaname)
+				.prependTo($area_container)
+				.hide();
+			
+			var $area_holder = $("<div>")
+				.addClass("amaruzen-store-area-items")
+				.appendTo($area_container);
+
+			for( var i = 0; i< results.length; ++i){
+				if( results.hasOwnProperty(i) ){
+					var $item = $("<div>").addClass("amaruzen-store");
+
+					var $name = $("<a>")
+						.text($.trim(results[i].store.text()));
+					$name
+						.wrap("<div>").parent()
+						.addClass("amaruzen-store-name")
+						.appendTo($item);
+
+					var storeId = /.*store_id=(\d+).*/.exec(results[i].store.attr("href"));
+					if( storeId && storeId.length > 0 ){
+						var reserveLink = "http://www.junkudo.co.jp/mj/products/keep_order.php?product_id=" + productId + "&store_id=" + storeId[1];
+						$name
+							.attr("href",reserveLink )
+							.attr("target","_blank")
+							.click(function(){
+								window.open($(this).attr("href"), '','width=600,height=400'); 
+								return false;
+							});
+						
+					}else{
+						$name
+							.attr("href","http://www.junkudo.co.jp/" + results[i].store.attr("href") )
+							.attr("target","_blank");
+					}
+
+					
+					$item.attr("title",results[i].stock + " / 棚位置：" + results[i].location);
+					$item.appendTo($area_holder);
+
+				}
+			}
+			$area_container.slideDown();
+			
+			if( firstInit ){
+				var $overlay = $("<div>")
+					.addClass("amaruzen-overlay")
+					.appendTo(".amaruzen-brand")
+					.hide()
+					.click(function(){
+						chrome.extension.sendRequest({"cmd":"SET_VERSION","value":VERSION});
+						firstInit = false;
+						$(this).slideUp();
+					});
+				var $overlayInner = $("<div>")
+					.addClass("amaruzen-overlay-inner")
+					.appendTo($overlay);
+				var $overlayBox = $("<div>").addClass("amaruzen-overlay-box")
+					.appendTo($overlayInner);
+				$("<div>")
+					.addClass("overlay-title")
+					.text("ようこそ amaruzen へ ")
+					.appendTo($overlayBox);
+				$("<div>")
+					.text("amazon.co.jp上で書籍のページを表示すると、選択したエリアにあるジュンク堂・丸善の店頭在庫のある店舗が表示されます。" +
+							"ジュンク堂サイトでログインしていれば、店舗をクリックすると、その場で取り置き依頼をすることができます。")
+					.appendTo($overlayBox);
+				$("<div>")
+					.addClass("overlay-txt-small")
+					.text(" version:" + VERSION)
+					.appendTo($overlayBox);
+				$overlay.fadeIn();
+			}
+
+		}
+	});
+
 }
