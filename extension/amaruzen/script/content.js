@@ -147,7 +147,7 @@ function loadStock(productId, areaId, areaName){
 		var results = new Array;
 		$rows.each(function(idx, row){
 			var $store = $("td a:eq(0)", row);
-			var $stock = $('td:eq(1) span:not(".label-important")',row);
+			var $stock = $('td:eq(1)',row);
 			var $reserve;// = $("td:eq(2)",row);
 			var $location = $("td:eq(2)",row);
 			if( $stock.length > 0 ){
@@ -164,6 +164,12 @@ function loadStock(productId, areaId, areaName){
 				.empty()
 				.text( areaName + "の丸善・ジュンク堂店舗に在庫はありません。")
 				.show();
+			$("<a>")
+				.addClass("amaruzen-detail-link")
+				.attr("href", "http://www.junkudo.co.jp/mj/products/stock.php?product_id="+productId+"&area_id="+areaId)
+				.attr("target","_blank")
+				.text("詳細")
+				.appendTo($junkudo_header_text);
 			$(".amaruzen-store-areas").show();
 		}else{
 			$junkudo_header
@@ -240,7 +246,7 @@ function loadStock(productId, areaId, areaName){
 				}
 
 				
-				$item.attr("title",$.trim(results[i].store.text()) + " " + results[i].stock + " / 棚位置：" + results[i].location);
+				$item.attr("title",$.trim(results[i].store.text()) + " / 在庫：" + results[i].stock + " / 棚位置：" + results[i].location);
 				$item.appendTo($area_holder);
 			}
 			$area_container.slideDown();
