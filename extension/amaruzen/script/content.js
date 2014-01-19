@@ -1,4 +1,4 @@
-var VERSION = 0.41;//current minor version
+var VERSION = 0.42;//current minor version
 var FORMAT_VERSION = 0.4; //current major version
 
 var isbn10Dom = $("td.bucket div.content ul li:contains('ISBN-10')").contents();
@@ -18,7 +18,7 @@ var $junkudo_header_text;
 var $junkudo_loading;
 var firstInit = true;
 
-if( isbn10 || isbn13 ){
+if( isbn13 || isbn10 ){
 	$("form#handleBuy>table:eq(2)>tbody>tr:nth-child(8)")
 		.after('<tr class="amaruzen-injection">');
 
@@ -56,7 +56,7 @@ if( isbn10 || isbn13 ){
 		if( res && res.version && res.version >= FORMAT_VERSION ){
 			firstInit = false;
 		}
-		var isbn = isbn10 || isbn13;
+		var isbn = isbn13 || isbn10;
 		$.get("http://www.junkudo.co.jp/mj/products/detail.php",{isbn:isbn},function(resDetail){
 			//rewrite "src" attribute of <img> to suppress request from browser
 			resDetail = resDetail.replace(/ src=/g,' data-src=');
