@@ -1,4 +1,4 @@
-var VERSION = 0.42;//current minor version
+var VERSION = 0.44;//current minor version
 var FORMAT_VERSION = 0.4; //current major version
 
 var isbn10Dom = $("td.bucket div.content ul li:contains('ISBN-10')").contents();
@@ -17,10 +17,17 @@ var $junkudo_header;
 var $junkudo_header_text;
 var $junkudo_loading;
 var firstInit = true;
+var $injectPos;
 
 if( isbn13 || isbn10 ){
-	$("form#handleBuy>table:eq(2)>tbody>tr:nth-child(8)")
-		.after('<tr class="amaruzen-injection">');
+
+	$injectPos = $("form#handleBuy>table:eq(2)>tbody>tr:nth-child(9)");
+  if( $injectPos.length == 0 ){
+  	$injectPos = $("#MediaMatrix");
+	  $injectPos.before('<div class="amaruzen-injection">');
+  }else{
+	  $injectPos.before('<tr class="amaruzen-injection">');
+	}
 
 	$junkudo_holder = $("<div>")
 		.addClass("amaruzen-brand")
@@ -65,13 +72,7 @@ if( isbn13 || isbn10 ){
 			var $areas = $('.state-button-group > a[href^="stock.php"].btn',resDetail);
 			
 			if( productId == null || $.trim(productId).length == 0 ){
-				$junkudo_header
-					.addClass("amaruzen-brand-loading")
-					.removeClass("amaruzen-brand-title");
-				$junkudo_loading.hide();
-				$junkudo_header_text
-					.text("丸善・ジュンク堂に書籍情報がありません。")
-					.show();
+				showNotFound();
 				return;
 			}
 			
@@ -119,9 +120,21 @@ if( isbn13 || isbn10 ){
 				selected = $allArea;
 			}
 			loadStock(productId, default_selected, selected.text());
+		}).fail(function(){
+			showNotFound();
 		});
 	
 	});
+}
+
+function showNotFound(){
+	$junkudo_header
+		.addClass("amaruzen-brand-loading")
+		.removeClass("amaruzen-brand-title");
+	$junkudo_loading.hide();
+	$junkudo_header_text
+		.text("丸善・ジュンク堂に書籍情報がありません。")
+		.show();
 }
 
 function loadStock(productId, areaId, areaName){
